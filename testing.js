@@ -1,5 +1,3 @@
-
-
 //Parent Sprit Classa
 class Sprite {
     constructor(sprite_json, x, y, start_state){
@@ -19,44 +17,52 @@ class Sprite {
         this.down_arrow = 40;
         this.left_arrow = 37;
         this.right_arrow = 39;
-        this.f_Key = 70;
-    }   
+    }
 
     draw() {
         var ctx = canvas.getContext('2d');
         
+        // Debugging
+        console.log('Current state:', this.state);
+        console.log('Current frame:', this.cur_frame);
+        console.log('x:', this.x, 'y:', this.y);
+        console.log('x velocity:', this.x_v, 'y velocity:', this.y_v);
+    
         if (this.sprite_json[this.root_e][this.state][this.cur_frame]['img'] == null) {
             console.log('Loading image...');
             this.sprite_json[this.root_e][this.state][this.cur_frame]['img'] = new Image();
             this.sprite_json[this.root_e][this.state][this.cur_frame]['img'].src = 'spriteImages/Penguins/' + this.root_e + '/' + this.state + '/' + this.cur_frame + '.png';
         }
-        /*
+    
         if (this.cur_bk_data != null) {
             ctx.putImageData(this.cur_bk_data, (this.x - this.x_v), (this.y - this.y_v));
         }
         this.cur_bk_data = ctx.getImageData(this.x, this.y,
             this.sprite_json[this.root_e][this.state][this.cur_frame]['w'],
             this.sprite_json[this.root_e][this.state][this.cur_frame]['h']);
-        */      
+              
         ctx.drawImage(this.sprite_json[this.root_e][this.state][this.cur_frame]['img'], this.x, this.y);
-        
+            
         this.cur_frame = this.cur_frame + 1;
         if (this.cur_frame >= this.sprite_json[this.root_e][this.state].length) {
             console.log('Resetting frame count');
             this.cur_frame = 0;
         }
         if (this.x >= (window.innerWidth - this.sprite_json[this.root_e][this.state][this.cur_frame]['w'])) {
-            this.bound_hit(this.state);
+            console.log('Hit boundary: East');
+            this.bound_hit('E');
+    
         } else if (this.x <= 0) {
-          
-            this.bound_hit(this.state);
+            console.log('Hit boundary: West');
+            this.bound_hit('W');
         } else if (this.y >= (window.innerHeight - this.sprite_json[this.root_e][this.state][this.cur_frame]['h'])) {
-         
-            this.bound_hit(this.state);
+            console.log('Hit boundary: South');
+            this.bound_hit('S');
         } else if (this.y <= 0) {
-           
-            this.bound_hit(this.state);
+            console.log('Hit boundary: North');
+            this.bound_hit('N');
         } else {
+            console.log('Moving sprite');
             this.x = this.x + this.x_v;
             this.y = this.y + this.y_v;
         }
@@ -66,100 +72,87 @@ class Sprite {
 
     handle_direction_change(keycode) {
         // local variables
-        const velocity = 20; 
+        const velocity = 20; // Adjust as needed
         console.log('Key code pressed:', keycode);
+    
         if (keycode == this.up_arrow) {
-        
-            this.y_v = -velocity; //  upward movement
+            console.log('Moving up');
+            this.y_v = -velocity; // Set y velocity for upward movement
             this.x_v = 0; // Reset x velocity
-            this.y -= 20; // Update sprite position
             this.state = "walk_N";
         } else if (keycode == this.down_arrow) {
-         
-            this.y_v = velocity; //  downward movement
+            console.log('Moving down');
+            this.y_v = velocity; // Set y velocity for downward movement
             this.x_v = 0; // Reset x velocity
-            this.y += 20; // Update sprite position
             this.state = "walk_S";
         } else if (keycode == this.left_arrow) {
-           
-            this.x_v = -velocity; //  leftward movement
+            console.log('Moving left');
+            this.x_v = -velocity; // Set x velocity for leftward movement
             this.y_v = 0; // Reset y velocity
-            this.x -= 20; // Update sprite position
             this.state = "walk_W";
         } else if (keycode == this.right_arrow) {
-          
-            this.x_v = velocity; // rightward movement
+            console.log('Moving right');
+            this.x_v = velocity; // Set x velocity for rightward movement
             this.y_v = 0; // Reset y velocity
-            this.x += 20; // Update sprite position
             this.state = "walk_E";
-        } else if(keycode == this.f_Key ){
-            this.handleRandomIdle()
-        }else {
-            this.x = this.x + this.x_v;
-            this.y = this.y + this.y_v;
+        } else {
+            // Handle other key presses (if needed)
         }
-        this.cur_frame = 0;
         this.draw()
+        // If the direction has changed, stop the sprite at its current position
+        this.cur_frame = 0;
     }
     
     
     
+    
+    
 
-    bound_action(side){
+    set_idle_state(side){
         
-        if(side == "walk_E"){
+        this.x_v = 0;
+        this.y_v = 0;
+        const idle_state = ["idle","idleBackAndForth","idleBreathing","idleFall","idleLayDown","idleLookAround","idleLookDown","idleLookLeft","idleLookRight","idleLookUp","idleSit","idleSpin","idleWave"];
+    
+        const random = Math.floor(Math.random() * idle_state.length);
+        console.log(idle_state[random]);
+        this.state = idle_state[random];
+        
+       
+        if(side == 'E'){
             this.state = "walk_W";
-            this.x_v = -20; // walking to the left
+            this.x_v = -20; // Adjust velocity for walking to the left
             this.y_v = 0;  // Reset y velocity
             this.x -=20 //move x by at least 1 position to not hit the bounds case again
-        } else if(side == "walk_W"){
+        } else if(side == 'W'){
+            console.log("need to walk east")
             this.state = "walk_E";
-            this.x_v = 20; //  walking to the right
+            this.x_v = 20; // Adjust velocity for walking to the right
             this.y_v = 0;  // Reset y velocity
             this.x +=20      //move x by at least 1 position to not hit the bounds case again
-        } else if(side == "walk_N"){
+        } else if(side == 'N'){
             this.state = "walk_S";
             this.x_v = 0;  // Reset x velocity
             this.y_v = 20; // Adjust velocity for walking downward
             this.y +=20      //move y by at least 1 position to not hit the bounds case again
-        } else if(side == "walk_S"){
+        } else if(side == 'S'){
             this.state = "walk_N";
             this.x_v = 0;  // Reset x velocity
             this.y_v = -20; // Adjust velocity for walking upward
             this.y -=20      //move y by at least 1 position to not hit the bounds case again
         }
-
+        
+       
         this.cur_frame = 0;
-
+    
+        // Reset velocities
+        //this.x_v = 0;
+        //this.y_v = 0;
     }
     
-
-    handleRandomIdle(){
-        const idle_state = ["idle", "idleBackAndForth", "idleBreathing", "idleFall", "idleLayDown", "idleLookAround", "idleLookDown", "idleLookLeft", "idleLookRight", "idleLookUp", "idleSit", "idleSpin", "idleWave"];
-        const randomIdle = idle_state[Math.floor(Math.random() * idle_state.length)];
-        this.x_v = 0;
-        this.y_v = 0;
-        this.state = randomIdle
-        
-        setTimeout(() => {
-            // Resume movement after the idle animation
-            this.bound_action(this.state);
-        }, 5000); 
-        
-        
-    }
-
-    
-  
-    
-    bound_hit(state) {
-        
-    this.bound_action(state);
-     
-    }
-    
-    
-    
+    bound_hit(side){
+        this.set_idle_state(side);
+   } 
 
 
 }
